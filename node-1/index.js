@@ -27,6 +27,7 @@ function printTreeItem(p, currentDepth, isLast = false) {
 }
 
 function printTree(root, remainingDepth = 0, currentDepth = 1) {
+    let counters = {files: 0, dirs: 0}
     const names = fs.readdirSync(root)
     const sortedPaths = names.map((n) => {
       const p = path.join(root, n)
@@ -39,9 +40,17 @@ function printTree(root, remainingDepth = 0, currentDepth = 1) {
     for(let i = 0, len = sortedPaths.length; i < len; i++) {
       printTreeItem(sortedPaths[i].p, currentDepth, i === len -1 )
       if (sortedPaths[i].isDir && remainingDepth > 0) {
-        printTree(sortedPaths[i].p, remainingDepth - 1, currentDepth + 1)
+        const treeCounters = printTree(sortedPaths[i].p, remainingDepth - 1, currentDepth + 1)
+        counters.files += treeCounters.files
+        counters.dirs += treeCounters.dirs
+      }
+      if (sortedPaths[i].isDir) {
+        counters.dirs++
+      } else {
+        counters.files++
       }
     }
+    return counters
 }
 
 const [ dir, depth ] = parseArgs()
@@ -53,7 +62,8 @@ if (!dir) {
 } else {
   console.log(dir)
   if (fs.lstatSync(dir).isDirectory()) {
-    printTree(dir, depth)
+    const counters = printTree(dir, depth)
+    console.log(`${counters.dirs} directories, ${counters.files} files`)
   }
 }
 
